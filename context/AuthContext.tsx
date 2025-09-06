@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { firebaseService, User } from '../services/firebaseService';
-import { DEV_MODE, mockUser } from '../config';
 
 interface AuthContextState {
   user: User | null;
@@ -18,22 +17,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (DEV_MODE) {
-      // In development mode, bypass Firebase and use the mock user.
-      setUser(mockUser as User);
+    const unsubscribe = firebaseService.onAuthStateChanged(currentUser => {
+      setUser(currentUser);
       setLoading(false);
-    } else {
-      // In production mode, use real Firebase authentication.
-      const unsubscribe = firebaseService.onAuthStateChanged(currentUser => {
-        setUser(currentUser);
-        setLoading(false);
-      });
-      return () => unsubscribe();
-    }
+    });
+    return () => unsubscribe();
   }, []);
 
   const loginWithGoogle = async () => {
-    if (DEV_MODE) return { error: "Development mode is enabled." };
     try {
       setLoading(true);
       await firebaseService.signInWithGoogle();
@@ -44,7 +35,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signIn = async (email: string, pass: string) => {
-    if (DEV_MODE) return { error: "Development mode is enabled." };
      try {
       setLoading(true);
       await firebaseService.signInWithEmailAndPassword(email, pass);
@@ -56,7 +46,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signUp = async (email: string, pass: string) => {
-    if (DEV_MODE) return { error: "Development mode is enabled." };
     try {
       setLoading(true);
       await firebaseService.createUserWithEmailAndPassword(email, pass);
@@ -68,10 +57,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
-    if (DEV_MODE) {
-      alert("Logout is disabled in Development Mode. To switch users, set DEV_MODE to false in config.ts.");
-      return;
-    }
     await firebaseService.signOut();
     setUser(null);
   };

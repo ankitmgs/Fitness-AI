@@ -1,11 +1,11 @@
 import { UserProfile, Gender, ActivityLevel, Goal } from './types';
 
 // --- DEVELOPMENT CONFIGURATION ---
-// Set to `true` to bypass Firebase authentication and use a mock user.
-// Set to `false` for production to enable real user authentication.
-export const DEV_MODE = true;
+// With the introduction of a backend, DEV_MODE is disabled.
+// The app now relies on a real database and Firebase authentication.
+export const DEV_MODE = false;
 
-// --- MOCK DATA (Only used when DEV_MODE is true) ---
+// --- MOCK DATA (No longer used in the application) ---
 
 // A mock Firebase User object to simulate a logged-in user.
 export const mockUser = {
@@ -28,7 +28,6 @@ export const mockUser = {
 
 
 // A mock UserProfile object to pre-populate the app.
-// This prevents needing to go through the profile setup screen in dev mode.
 export const mockProfile: UserProfile = {
   name: 'Dev User',
   age: 30,
