@@ -15,7 +15,8 @@ interface DataContextState {
   allWorkouts: WorkoutLog[]; // All historical workouts
   customMeals: CustomMeal[];
   weightLogs: WeightLog[];
-  waterLog: WaterLog;
+  waterLog: WaterLog; // Today's water log
+  allWaterLogs: WaterLog[]; // All historical water logs
   adjustedDailyGoals: DailyGoals | null;
   isLoading: boolean;
   isInitialized: boolean;
@@ -24,7 +25,7 @@ interface DataContextState {
   addCustomMeal: (customMealData: Omit<CustomMeal, 'id'>) => Promise<void>;
   addWorkout: (workout: Omit<WorkoutLog, 'id' | 'date' | 'caloriesBurned'> & { date?: string }) => Promise<void>;
   addWeightLog: (weight: number, date?: string) => Promise<void>;
-  addWater: () => Promise<void>;
+  addWater: (amount: number) => Promise<void>;
 }
 
 export const DataContext = createContext<DataContextState | undefined>(undefined);
@@ -38,7 +39,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [allWorkouts, setAllWorkouts] = useState<WorkoutLog[]>([]); // All workouts
   const [customMeals, setCustomMeals] = useState<CustomMeal[]>([]);
   const [weightLogs, setWeightLogs] = useState<WeightLog[]>([]);
-  const [waterLog, setWaterLog] = useState<WaterLog>({ date: getTodayDateString(), glasses: 0 });
+  const [waterLog, setWaterLog] = useState<WaterLog>({ date: getTodayDateString(), amount: 0 });
+  const [allWaterLogs, setAllWaterLogs] = useState<WaterLog[]>([]);
   const [adjustedDailyGoals, setAdjustedDailyGoals] = useState<DailyGoals | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
@@ -58,16 +60,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     
     if (fetchedProfile) {
-      const [fetchedAllMeals, fetchedWeightLogs, fetchedWaterLog, fetchedAllWorkouts, fetchedCustomMeals] = await Promise.all([
+      const [fetchedAllMeals, fetchedWeightLogs, fetchedAllWaterLogs, fetchedAllWorkouts, fetchedCustomMeals] = await Promise.all([
         storageService.getAllMeals(userId),
         storageService.getWeightHistory(userId),
-        storageService.getWaterLog(userId, today),
+        storageService.getAllWaterLogs(userId),
         storageService.getAllWorkouts(userId),
         storageService.getCustomMeals(userId),
       ]);
 
       const todayMeals = fetchedAllMeals.filter(meal => meal.date === today);
       const todayWorkouts = fetchedAllWorkouts.filter(workout => workout.date === today);
+      const todayWaterLog = fetchedAllWaterLogs.find(log => log.date === today) || { date: today, amount: 0 };
       
       setProfile(fetchedProfile);
       setAllMeals(fetchedAllMeals);
@@ -75,7 +78,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setMeals(todayMeals);
       setWorkouts(todayWorkouts);
       setWeightLogs(fetchedWeightLogs);
-      setWaterLog(fetchedWaterLog);
+      setAllWaterLogs(fetchedAllWaterLogs);
+      setWaterLog(todayWaterLog);
       setCustomMeals(fetchedCustomMeals);
 
       // Adjust daily goals based on today's workouts
@@ -191,12 +195,24 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(false);
   };
 
-  const addWater = async () => {
+  const addWater = async (amount: number) => {
     if (!userId) return;
     const today = getTodayDateString();
-    const newWaterLog = { date: today, glasses: waterLog.glasses + 1 };
+    const newAmount = (waterLog?.amount || 0) + amount;
+    const newWaterLog = { date: today, amount: newAmount };
     await storageService.saveWaterLog(userId, newWaterLog);
+
     setWaterLog(newWaterLog);
+    
+    // Update allWaterLogs state without a full refresh
+    const existingLogIndex = allWaterLogs.findIndex(item => item.date === today);
+    const newAllWaterLogs = [...allWaterLogs];
+     if(existingLogIndex > -1){
+        newAllWaterLogs[existingLogIndex] = newWaterLog;
+    } else {
+        newAllWaterLogs.push(newWaterLog);
+    }
+    setAllWaterLogs(newAllWaterLogs);
   };
 
   const contextValue: DataContextState = {
@@ -208,6 +224,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     customMeals,
     weightLogs,
     waterLog,
+    allWaterLogs,
     adjustedDailyGoals,
     isLoading,
     isInitialized,

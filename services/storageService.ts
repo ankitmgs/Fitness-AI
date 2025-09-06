@@ -76,7 +76,7 @@ class StorageService {
 
   async getWaterLog(userId: string, date: string): Promise<WaterLog> {
     const allLogs = await this.getAllWaterLogs(userId);
-    return allLogs.find(log => log.date === date) || { date, glasses: 0 };
+    return allLogs.find(log => log.date === date) || { date, amount: 0 };
   }
 
   async saveWaterLog(userId: string, log: WaterLog): Promise<void> {

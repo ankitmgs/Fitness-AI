@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useData } from '../hooks/useData';
 import { geminiService } from '../services/geminiService';
-import { ActivityLevel, Gender, Goal, UserProfile } from '../types';
+import { ActivityLevel, Gender, Goal, UserProfile, DailyGoals } from '../types';
 import Spinner from './common/Spinner';
 
 const ProfileSetup: React.FC = () => {
@@ -42,11 +42,16 @@ const ProfileSetup: React.FC = () => {
         throw new Error('Please fill out all fields correctly.');
       }
 
-      const dailyGoals = await geminiService.calculateDailyGoals(profileData);
+      const macroGoals = await geminiService.calculateDailyGoals(profileData);
 
-      if (!dailyGoals) {
+      if (!macroGoals) {
         throw new Error('Failed to calculate daily goals. Please try again.');
       }
+
+      const dailyGoals: DailyGoals = {
+        ...macroGoals,
+        water: 2500, // Default water goal in ml
+      };
 
       const fullProfile: UserProfile = {
         ...profileData,

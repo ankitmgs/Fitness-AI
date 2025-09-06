@@ -120,6 +120,7 @@ const Profile: React.FC = () => {
     { name: 'protein', label: 'Protein', value: `${Math.round(profile.dailyGoals.protein)} g` },
     { name: 'carbs', label: 'Carbs', value: `${Math.round(profile.dailyGoals.carbs)} g` },
     { name: 'fat', label: 'Fat', value: `${Math.round(profile.dailyGoals.fat)} g` },
+    { name: 'water', label: 'Water', value: `${Math.round(profile.dailyGoals.water)} ml` },
   ];
 
   return (
@@ -160,7 +161,7 @@ const Profile: React.FC = () => {
                                 onChange={handleGoalInputChange}
                                 className="w-28 px-2 py-1 border rounded-md dark:bg-gray-700 dark:border-gray-600 text-right"
                             />
-                             <span className="ml-2 font-medium w-8 text-left">{goal.name === 'calories' ? 'kcal' : 'g'}</span>
+                             <span className="ml-2 font-medium w-8 text-left">{goal.name === 'calories' ? 'kcal' : goal.name === 'water' ? 'ml' : 'g'}</span>
                          </div>
                     </div>
                 ))}

@@ -12,12 +12,14 @@ import SuggestMealPrompt from './SuggestMealPrompt';
 import AddWorkoutModal from './AddWorkoutModal';
 import WorkoutList from './dashboard/WorkoutList';
 import CustomMealList from './dashboard/CustomMealList';
+import AddWaterModal from './AddWaterModal';
 
 const Dashboard: React.FC = () => {
   const { profile, meals, workouts, waterLog, addWater, isLoading, adjustedDailyGoals, customMeals } = useData();
   const [isLogMealOpen, setIsLogMealOpen] = useState(false);
   const [isAddWeightOpen, setIsAddWeightOpen] = useState(false);
   const [isAddWorkoutOpen, setIsAddWorkoutOpen] = useState(false);
+  const [isAddWaterOpen, setIsAddWaterOpen] = useState(false);
   const [isSuggestPromptOpen, setIsSuggestPromptOpen] = useState(false);
   const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
   const [suggestedMeal, setSuggestedMeal] = useState<{ name: string; description: string; macros: Macros} | null>(null);
@@ -36,6 +38,8 @@ const Dashboard: React.FC = () => {
   }, [meals]);
 
   if (!profile || !adjustedDailyGoals) return <div className="flex justify-center items-center h-64"><Spinner/></div>;
+  
+  const waterProgress = adjustedDailyGoals.water > 0 ? (waterLog.amount / adjustedDailyGoals.water) * 100 : 0;
 
   const handleGenerateSuggestion = async (preferences: string) => {
     setIsSuggestPromptOpen(false);
@@ -72,15 +76,20 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-          <h3 className="font-semibold mb-2">Water Intake</h3>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <WaterIcon className="w-8 h-8 text-blue-500" />
-              <span className="text-2xl font-bold">{waterLog.glasses}</span>
-              <span className="text-gray-500 dark:text-gray-400">glasses</span>
-            </div>
-            <button onClick={addWater} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">+</button>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex flex-col justify-between">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-semibold">Water Intake</h3>
+            <button onClick={() => setIsAddWaterOpen(true)} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">Add</button>
+          </div>
+          <div className="flex items-end space-x-2">
+              <WaterIcon className="w-8 h-8 text-blue-500 mb-1" />
+              <div>
+                  <span className="text-3xl font-bold">{waterLog.amount}</span>
+                  <span className="text-gray-500 dark:text-gray-400"> / {adjustedDailyGoals.water} ml</span>
+              </div>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+              <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${Math.min(waterProgress, 100)}%` }}></div>
           </div>
         </div>
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
@@ -131,6 +140,7 @@ const Dashboard: React.FC = () => {
       {isLogMealOpen && <LogMeal onClose={handleCloseLogMeal} initialData={suggestedMeal} />}
       {isAddWeightOpen && <AddWeightModal onClose={() => setIsAddWeightOpen(false)} />}
       {isAddWorkoutOpen && <AddWorkoutModal onClose={() => setIsAddWorkoutOpen(false)} />}
+      {isAddWaterOpen && <AddWaterModal onClose={() => setIsAddWaterOpen(false)} />}
     </div>
   );
 };
