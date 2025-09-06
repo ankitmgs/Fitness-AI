@@ -4,7 +4,6 @@ import { storageService } from '../services/storageService';
 import { notificationService } from '../services/notificationService';
 import { getTodayDateString } from '../utils/dateUtils';
 import { useAuth } from './AuthContext';
-import { DEV_MODE, mockProfile } from '../config';
 import { geminiService } from '../services/geminiService';
 
 interface DataContextState {
@@ -48,56 +47,73 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const userId = user?.uid;
 
   const refreshData = useCallback(async () => {
-    if (!userId) return;
+    if (!user) return;
     setIsLoading(true);
     const today = getTodayDateString();
     
-    let fetchedProfile = await storageService.getProfile(userId);
-
-    if (DEV_MODE && !fetchedProfile) {
-      await storageService.saveProfile(userId, mockProfile);
-      fetchedProfile = mockProfile;
-    }
-    
-    if (fetchedProfile) {
-      const [fetchedAllMeals, fetchedWeightLogs, fetchedAllWaterLogs, fetchedAllWorkouts, fetchedCustomMeals] = await Promise.all([
-        storageService.getAllMeals(userId),
-        storageService.getWeightHistory(userId),
-        storageService.getAllWaterLogs(userId),
-        storageService.getAllWorkouts(userId),
-        storageService.getCustomMeals(userId),
-      ]);
-
-      const todayMeals = fetchedAllMeals.filter(meal => meal.date === today);
-      const todayWorkouts = fetchedAllWorkouts.filter(workout => workout.date === today);
-      const todayWaterLog = fetchedAllWaterLogs.find(log => log.date === today) || { date: today, amount: 0 };
+    try {
+      const token = await user.getIdToken();
+      const fetchedProfile = await storageService.getProfile(token);
       
-      setProfile(fetchedProfile);
-      setAllMeals(fetchedAllMeals);
-      setAllWorkouts(fetchedAllWorkouts);
-      setMeals(todayMeals);
-      setWorkouts(todayWorkouts);
-      setWeightLogs(fetchedWeightLogs);
-      setAllWaterLogs(fetchedAllWaterLogs);
-      setWaterLog(todayWaterLog);
-      setCustomMeals(fetchedCustomMeals);
+      if (fetchedProfile) {
+        const [fetchedAllMeals, fetchedWeightLogs, fetchedAllWaterLogs, fetchedAllWorkouts, fetchedCustomMeals] = await Promise.all([
+          storageService.getAllMeals(token),
+          storageService.getWeightHistory(token),
+          storageService.getAllWaterLogs(token),
+          storageService.getAllWorkouts(token),
+          storageService.getCustomMeals(token),
+        ]);
 
-      // Adjust daily goals based on today's workouts
-      const caloriesBurned = todayWorkouts.reduce((acc, w) => acc + w.caloriesBurned, 0);
-      setAdjustedDailyGoals({
-        ...fetchedProfile.dailyGoals,
-        calories: fetchedProfile.dailyGoals.calories + caloriesBurned
-      });
+        const todayMeals = fetchedAllMeals.filter(meal => meal.date === today);
+        const todayWorkouts = fetchedAllWorkouts.filter(workout => workout.date === today);
+        const todayWaterLog = fetchedAllWaterLogs.find(log => log.date === today) || { date: today, amount: 0 };
+        
+        setProfile(fetchedProfile);
+        setAllMeals(fetchedAllMeals);
+        setAllWorkouts(fetchedAllWorkouts);
+        setMeals(todayMeals);
+        setWorkouts(todayWorkouts);
+        setWeightLogs(fetchedWeightLogs);
+        setAllWaterLogs(fetchedAllWaterLogs);
+        setWaterLog(todayWaterLog);
+        setCustomMeals(fetchedCustomMeals);
 
+        // Adjust daily goals based on today's workouts
+        const caloriesBurned = todayWorkouts.reduce((acc, w) => acc + w.caloriesBurned, 0);
+        setAdjustedDailyGoals({
+          ...fetchedProfile.dailyGoals,
+          calories: fetchedProfile.dailyGoals.calories + caloriesBurned
+        });
+      } else {
+        // If no profile, reset all data states
+        setProfile(null);
+        setAllMeals([]);
+        setAllWorkouts([]);
+        setMeals([]);
+        setWorkouts([]);
+        setWeightLogs([]);
+        setAllWaterLogs([]);
+        setWaterLog({ date: today, amount: 0 });
+        setCustomMeals([]);
+      }
+    } catch (error) {
+        console.error("Failed to refresh data:", error);
+        // Handle error state if necessary
+    } finally {
+        setIsLoading(false);
+        setIsInitialized(true);
     }
-
-    setIsLoading(false);
-    setIsInitialized(true);
-  }, [userId]);
+  }, [user]);
 
   useEffect(() => {
-    refreshData();
-  }, [refreshData]);
+    if (user) {
+      refreshData();
+    } else {
+      // If user logs out, clear all data and reset state
+      setIsInitialized(false);
+      setProfile(null);
+    }
+  }, [user, refreshData]);
 
   // Handle Notifications
   useEffect(() => {
@@ -120,57 +136,52 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [meals, profile, adjustedDailyGoals, userId]);
 
   const saveProfile = async (newProfile: UserProfile) => {
-    if (!userId) return;
+    if (!user) return;
     setIsLoading(true);
-    await storageService.saveProfile(userId, newProfile);
-    setProfile(newProfile);
+    const token = await user.getIdToken();
+    const savedProfile = await storageService.saveProfile(token, newProfile);
+    setProfile(savedProfile);
+    await refreshData(); // Refresh all data after profile update
     setIsLoading(false);
   };
 
   const addMeal = async (mealData: Omit<Meal, 'id' | 'date'> & { date?: string }) => {
-    if (!userId) return;
+    if (!user) return;
     setIsLoading(true);
-    const newMeal: Meal = {
-      name: mealData.name,
-      description: mealData.description,
-      macros: mealData.macros,
-      mealType: mealData.mealType,
-      id: new Date().toISOString(),
+    const token = await user.getIdToken();
+    const newMealData: Omit<Meal, 'id'> = {
+      ...mealData,
       date: mealData.date || getTodayDateString(),
     };
-    await storageService.addMeal(userId, newMeal);
+    await storageService.addMeal(token, newMealData);
     await refreshData();
     setIsLoading(false);
   };
 
   const addCustomMeal = async (customMealData: Omit<CustomMeal, 'id'>) => {
-    if (!userId) return;
-    const newCustomMeal: CustomMeal = {
-      ...customMealData,
-      id: new Date().toISOString(),
-    };
-    await storageService.addCustomMeal(userId, newCustomMeal);
-    // Refresh the custom meals list in the state without a full reload
-    const fetchedCustomMeals = await storageService.getCustomMeals(userId);
+    if (!user) return;
+    const token = await user.getIdToken();
+    await storageService.addCustomMeal(token, customMealData);
+    const fetchedCustomMeals = await storageService.getCustomMeals(token);
     setCustomMeals(fetchedCustomMeals);
   };
 
   const addWorkout = async (workout: Omit<WorkoutLog, 'id' | 'date' | 'caloriesBurned'> & { date?: string }) => {
-    if (!userId || !profile) return;
+    if (!user || !profile) return;
     setIsLoading(true);
+    const token = await user.getIdToken();
     const caloriesBurned = await geminiService.estimateCaloriesBurned({
       ...workout,
       userWeight: profile.weight
     });
 
     if (caloriesBurned !== null) {
-      const newWorkout: WorkoutLog = {
+      const newWorkoutData: Omit<WorkoutLog, 'id'> = {
         ...workout,
-        id: new Date().toISOString(),
         date: workout.date || getTodayDateString(),
         caloriesBurned: caloriesBurned,
       };
-      await storageService.addWorkout(userId, newWorkout);
+      await storageService.addWorkout(token, newWorkoutData);
       await refreshData();
     } else {
        alert("Could not estimate calories burned. Please try again.");
@@ -179,15 +190,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const addWeightLog = async (weight: number, date?: string) => {
-    if (!userId) return;
+    if (!user) return;
     setIsLoading(true);
+    const token = await user.getIdToken();
     const logDate = date || getTodayDateString();
-    await storageService.addWeightLog(userId, { date: logDate, weight });
+    await storageService.addWeightLog(token, { date: logDate, weight });
 
-    // Only update the main profile weight if the log is for today
     if (logDate === getTodayDateString() && profile) {
       const updatedProfile = { ...profile, weight };
-      await storageService.saveProfile(userId, updatedProfile);
+      await storageService.saveProfile(token, updatedProfile);
       setProfile(updatedProfile);
     }
     
@@ -196,15 +207,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const addWater = async (amount: number) => {
-    if (!userId) return;
+    if (!user) return;
+    const token = await user.getIdToken();
     const today = getTodayDateString();
     const newAmount = (waterLog?.amount || 0) + amount;
     const newWaterLog = { date: today, amount: newAmount };
-    await storageService.saveWaterLog(userId, newWaterLog);
-
-    setWaterLog(newWaterLog);
     
-    // Update allWaterLogs state without a full refresh
+    await storageService.saveWaterLog(token, newWaterLog);
+    
+    setWaterLog(newWaterLog);
     const existingLogIndex = allWaterLogs.findIndex(item => item.date === today);
     const newAllWaterLogs = [...allWaterLogs];
      if(existingLogIndex > -1){
