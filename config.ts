@@ -42,6 +42,7 @@ export const mockProfile: UserProfile = {
     protein: 150,
     carbs: 300,
     fat: 80,
+    water: 2500, // ml
   },
   reminderSettings: {
     water: { enabled: true, frequency: 120 },

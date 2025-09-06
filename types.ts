@@ -47,7 +47,9 @@ export interface Macros {
   fat: number;
 }
 
-export type DailyGoals = Macros;
+export interface DailyGoals extends Macros {
+  water: number; // in ml
+}
 
 export enum MealType {
     BREAKFAST = "Breakfast",
@@ -79,7 +81,7 @@ export interface WeightLog {
 
 export interface WaterLog {
   date: string; // YYYY-MM-DD
-  glasses: number;
+  amount: number; // in ml
 }
 
 export enum Intensity {
