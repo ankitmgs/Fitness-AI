@@ -1,5 +1,8 @@
 import type { UserProfile, Meal, WeightLog, WaterLog, WorkoutLog, CustomMeal } from '../types';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+
 /**
  * A helper function to make authenticated API requests to the backend.
  * @param method The HTTP method ('GET', 'POST', 'PUT').
@@ -19,7 +22,7 @@ const apiRequest = async (method: 'GET' | 'POST' | 'PUT', endpoint: string, toke
     if (body) {
         options.body = JSON.stringify(body);
     }
-    const response = await fetch(`${process.env.API_BASE_URL}${endpoint}`, options);
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
     
     if (response.status === 204) {
       return null;
