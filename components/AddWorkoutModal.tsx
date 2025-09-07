@@ -9,16 +9,18 @@ interface AddWorkoutModalProps {
 }
 
 const AddWorkoutModal: React.FC<AddWorkoutModalProps> = ({ onClose }) => {
-  const { addWorkout, isLoading } = useData();
+  const { addWorkout } = useData();
   const [exerciseType, setExerciseType] = useState('');
   const [duration, setDuration] = useState('');
   const [intensity, setIntensity] = useState<Intensity>(Intensity.MEDIUM);
   const [date, setDate] = useState(getTodayDateString());
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const durationValue = parseInt(duration, 10);
     if (exerciseType && !isNaN(durationValue) && durationValue > 0) {
+      setIsSaving(true);
       await addWorkout({
         exerciseType,
         duration: durationValue,
@@ -67,8 +69,8 @@ const AddWorkoutModal: React.FC<AddWorkoutModalProps> = ({ onClose }) => {
         </div>
         <div className="mt-6 flex justify-end space-x-3">
           <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded-md hover:bg-gray-400">Cancel</button>
-          <button type="submit" disabled={isLoading} className="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 disabled:bg-cyan-400 flex items-center justify-center min-w-[150px]">
-            {isLoading ? <Spinner /> : 'Calculate & Save'}
+          <button type="submit" disabled={isSaving} className="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 disabled:bg-cyan-400 flex items-center justify-center min-w-[150px]">
+            {isSaving ? <Spinner className="text-white" /> : 'Calculate & Save'}
           </button>
         </div>
       </form>

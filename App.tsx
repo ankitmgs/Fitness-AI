@@ -35,7 +35,7 @@ const Main: React.FC = () => {
   if (authLoading || (user && !isInitialized)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <Spinner />
+        <Spinner className="h-10 w-10" />
       </div>
     );
   }

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { firebaseService, User } from '../services/firebaseService';
+import { DEV_MODE, mockUser } from '../config';
 
 interface AuthContextState {
   user: User | null;
@@ -17,6 +18,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (DEV_MODE) {
+      // In dev mode, bypass Firebase and use mock user.
+      setUser(mockUser as User);
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = firebaseService.onAuthStateChanged(currentUser => {
       setUser(currentUser);
       setLoading(false);
@@ -57,6 +65,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
+    if (DEV_MODE) {
+      console.log("DEV_MODE: Logout is disabled.");
+      return;
+    }
     await firebaseService.signOut();
     setUser(null);
   };
