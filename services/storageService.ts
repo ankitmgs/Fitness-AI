@@ -19,7 +19,7 @@ const apiRequest = async (method: 'GET' | 'POST' | 'PUT', endpoint: string, toke
     if (body) {
         options.body = JSON.stringify(body);
     }
-    const response = await fetch(endpoint, options);
+    const response = await fetch(`${process.env.API_BASE_URL}${endpoint}`, options);
     
     if (response.status === 204) {
       return null;
