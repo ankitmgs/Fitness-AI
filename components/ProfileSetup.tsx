@@ -3,11 +3,25 @@ import { useData } from '../hooks/useData';
 import { geminiService } from '../services/geminiService';
 import { ActivityLevel, Gender, Goal, UserProfile, DailyGoals } from '../types';
 import Spinner from './common/Spinner';
+import { useAuth } from '../context/AuthContext';
 
 const ProfileSetup: React.FC = () => {
   const { saveProfile } = useData();
+  const { user } = useAuth();
+
+  const getDefaultName = () => {
+    if (user?.email) {
+      return user.email.split('@')[0]
+        .replace(/[._-]/g, ' ') // Replace common separators
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize each word
+        .join(' ');
+    }
+    return '';
+  };
+
   const [formData, setFormData] = useState({
-    name: '',
+    name: getDefaultName(),
     age: '',
     weight: '',
     height: '',

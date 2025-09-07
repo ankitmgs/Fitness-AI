@@ -23,3 +23,44 @@ export const addMeal = async (req, res) => {
         res.status(400).json({ message: 'Invalid meal data' });
     }
 };
+
+export const updateMeal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const mealData = req.body;
+        const userId = req.user.uid;
+
+        const updatedMeal = await Meal.findOneAndUpdate(
+            { _id: id, userId: userId },
+            mealData,
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedMeal) {
+            return res.status(404).json({ message: 'Meal not found or you do not have permission to edit it.' });
+        }
+
+        res.json(updatedMeal);
+    } catch (error) {
+        console.error("Error updating meal:", error);
+        res.status(400).json({ message: 'Invalid meal data' });
+    }
+};
+
+export const deleteMeal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.uid;
+
+        const deletedMeal = await Meal.findOneAndDelete({ _id: id, userId: userId });
+
+        if (!deletedMeal) {
+            return res.status(404).json({ message: 'Meal not found or you do not have permission to delete it.' });
+        }
+
+        res.status(204).send();
+    } catch (error) {
+        console.error("Error deleting meal:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
