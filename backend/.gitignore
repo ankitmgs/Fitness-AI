@@ -1,0 +1,7 @@
+# Environment variable files
+.env
+# Node modules (never commit dependencies)
+node_modules/
+
+# Firebase service account key (never commit secrets)
+firebase-service-account-key.json
