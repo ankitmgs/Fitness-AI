@@ -9,11 +9,11 @@
 // ----------------------------------------------------------------
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyBnOsH41iNuE4_RNwqUqZxpErnjMB3b_Z8",
-  authDomain: "fitness-ai-654aa.firebaseapp.com",
-  projectId: "fitness-ai-654aa",
-  storageBucket: "fitness-ai-654aa.firebasestorage.app",
-  messagingSenderId: "541552271346",
-  appId: "1:541552271346:web:68e30620d10b941c86d56b",
-  measurementId: "G-33KHHF0HE9"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_STORGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGEING_SENDER_ID,
+  appId: import.meta.env.VITE_APP_ID,
+  measurementId: import.meta.env.VITE_MEASUREMENT_ID
 };

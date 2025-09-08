@@ -75,11 +75,13 @@ export interface CustomMeal {
 }
 
 export interface WeightLog {
+  id: string;
   date: string; // YYYY-MM-DD
   weight: number; // in kg
 }
 
 export interface WaterLog {
+  id: string;
   date: string; // YYYY-MM-DD
   amount: number; // in ml
 }

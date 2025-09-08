@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../hooks/useData';
 import Spinner from './common/Spinner';
-import { PencilIcon, CheckIcon } from './common/Icons';
+import { PencilIcon, CheckIcon, UserCircleIcon } from './common/Icons';
 import { DailyGoals, ReminderSettings } from '../types';
 import ToggleSwitch from './common/ToggleSwitch';
 
 const Profile: React.FC = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { profile, saveProfile, isLoading } = useData();
   const [isEditingGoals, setIsEditingGoals] = useState(false);
   const [customGoals, setCustomGoals] = useState<DailyGoals | null>(null);
+  const [isSavingGoals, setIsSavingGoals] = useState(false);
 
   // State for custom water reminder frequency
   const [isCustomFrequency, setIsCustomFrequency] = useState(false);
@@ -61,8 +62,10 @@ const Profile: React.FC = () => {
   const handleSaveGoals = async () => {
     if (!profile || !customGoals) return;
     
+    setIsSavingGoals(true);
     const updatedProfile = { ...profile, dailyGoals: customGoals };
     await saveProfile(updatedProfile);
+    setIsSavingGoals(false);
     setIsEditingGoals(false);
     setCustomGoals(null);
   };
@@ -106,7 +109,6 @@ const Profile: React.FC = () => {
   };
 
   const profileDetails = [
-    { label: 'Name', value: profile.name },
     { label: 'Age', value: profile.age },
     { label: 'Weight', value: `${profile.weight} kg` },
     { label: 'Height', value: `${profile.height} cm` },
@@ -125,8 +127,18 @@ const Profile: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+        <div className="flex flex-col items-center">
+            {user?.photoURL ? (
+                <img src={user.photoURL} alt="Profile" className="w-24 h-24 rounded-full" referrerPolicy="no-referrer" />
+            ) : (
+                <UserCircleIcon className="w-24 h-24 text-gray-400" />
+            )}
+            <h2 className="text-2xl font-bold text-center mt-4">{profile.name}</h2>
+            <p className="text-center text-gray-500 dark:text-gray-400 mb-6">{user?.email}</p>
+        </div>
+        
+        <h3 className="text-lg font-semibold mb-4 border-t border-gray-200 dark:border-gray-700 pt-4">Your Details</h3>
         <div className="space-y-2">
           {profileDetails.map(detail => (
             <div key={detail.label} className="flex justify-between">
@@ -167,8 +179,8 @@ const Profile: React.FC = () => {
                 ))}
                  <div className="flex justify-end space-x-2 pt-2">
                     <button onClick={handleCancelEditGoals} className="px-3 py-1 bg-gray-200 dark:bg-gray-600 text-sm rounded-md hover:bg-gray-300">Cancel</button>
-                    <button onClick={handleSaveGoals} disabled={isLoading} className="px-3 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 disabled:bg-green-300 flex items-center justify-center min-w-[70px]">
-                        {isLoading ? <Spinner /> : 'Save'}
+                    <button onClick={handleSaveGoals} disabled={isSavingGoals || isLoading} className="px-3 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 disabled:bg-green-300 flex items-center justify-center min-w-[70px]">
+                        {isSavingGoals ? <Spinner className="text-white" /> : 'Save'}
                     </button>
                 </div>
              </div>

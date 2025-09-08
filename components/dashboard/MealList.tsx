@@ -19,7 +19,7 @@ const MealList: React.FC<MealListProps> = ({ meals }) => {
       {meals.map(meal => (
         <div key={meal.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <div className="flex justify-between items-start">
-            <div>
+            <div className="flex-1">
               <p className="font-semibold">{meal.name}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">{meal.mealType}</p>
               <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{meal.description}</p>

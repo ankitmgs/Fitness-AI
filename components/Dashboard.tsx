@@ -15,7 +15,7 @@ import CustomMealList from './dashboard/CustomMealList';
 import AddWaterModal from './AddWaterModal';
 
 const Dashboard: React.FC = () => {
-  const { profile, meals, workouts, waterLog, addWater, isLoading, adjustedDailyGoals, customMeals } = useData();
+  const { profile, meals, workouts, waterLog, addWater, isLoading, adjustedDailyGoals, customMeals, resetTodaysWaterLog } = useData();
   const [isLogMealOpen, setIsLogMealOpen] = useState(false);
   const [isAddWeightOpen, setIsAddWeightOpen] = useState(false);
   const [isAddWorkoutOpen, setIsAddWorkoutOpen] = useState(false);
@@ -23,6 +23,7 @@ const Dashboard: React.FC = () => {
   const [isSuggestPromptOpen, setIsSuggestPromptOpen] = useState(false);
   const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
   const [suggestedMeal, setSuggestedMeal] = useState<{ name: string; description: string; macros: Macros} | null>(null);
+  const [isResettingWater, setIsResettingWater] = useState(false);
 
   const consumedMacros = useMemo(() => {
     return meals.reduce(
@@ -67,6 +68,14 @@ const Dashboard: React.FC = () => {
         setSuggestedMeal(null);
     }
   }
+  
+  const handleResetWater = async () => {
+    if (window.confirm("Are you sure you want to reset today's water intake to 0?")) {
+        setIsResettingWater(true);
+        await resetTodaysWaterLog();
+        setIsResettingWater(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -79,7 +88,18 @@ const Dashboard: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow flex flex-col justify-between">
           <div className="flex justify-between items-start mb-2">
             <h3 className="font-semibold">Water Intake</h3>
-            <button onClick={() => setIsAddWaterOpen(true)} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">Add</button>
+            <div className="flex space-x-2">
+                 {waterLog.amount > 0 && (
+                    <button 
+                        onClick={handleResetWater} 
+                        disabled={isResettingWater}
+                        className="px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 text-xs disabled:bg-red-300 flex items-center justify-center min-w-[55px]"
+                    >
+                        {isResettingWater ? <Spinner className="text-white" /> : 'Reset'}
+                    </button>
+                 )}
+                 <button onClick={() => setIsAddWaterOpen(true)} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">Add</button>
+            </div>
           </div>
           <div className="flex items-end space-x-2">
               <WaterIcon className="w-8 h-8 text-blue-500 mb-1" />
@@ -110,7 +130,7 @@ const Dashboard: React.FC = () => {
           <h2 className="text-xl font-semibold">Today's Meals</h2>
           <div className="flex space-x-2">
              <button onClick={() => setIsSuggestPromptOpen(true)} disabled={isGeneratingSuggestion} className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:bg-yellow-300 flex items-center justify-center min-w-[130px]">
-                {isGeneratingSuggestion ? <Spinner /> : <><LightBulbIcon className="w-5 h-5 mr-2" /> Suggest</>}
+                {isGeneratingSuggestion ? <Spinner className="text-white" /> : <><LightBulbIcon className="w-5 h-5 mr-2" /> Suggest</>}
             </button>
             <button onClick={() => setIsLogMealOpen(true)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                 Log Meal

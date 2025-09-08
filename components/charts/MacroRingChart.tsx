@@ -86,11 +86,10 @@ const MacroRingChart: React.FC<MacroRingChartProps> = ({ consumed, goal }) => {
           ))}
         </svg>
          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <div className="leading-tight">
-                <span className="text-3xl font-bold">{Math.round(consumed.calories)}</span>
-                <span className="text-lg text-gray-500 dark:text-gray-400"> / {Math.round(goal.calories)}</span>
-            </div>
-             <span className="text-sm text-gray-500 dark:text-gray-400">kcal consumed</span>
+            <span className="text-3xl font-bold leading-tight">{Math.round(consumed.calories)}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              / {Math.round(goal.calories)} kcal
+            </span>
          </div>
       </div>
       <div className="flex justify-around w-full text-center">

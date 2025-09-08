@@ -1,17 +1,18 @@
 import { UserProfile, Gender, ActivityLevel, Goal } from './types';
 
 // --- DEVELOPMENT CONFIGURATION ---
-// With the introduction of a backend, DEV_MODE is disabled.
-// The app now relies on a real database and Firebase authentication.
+// DEV_MODE can be enabled to bypass Firebase authentication and use mock data
+// for local frontend development without needing a running backend or internet connection.
 export const DEV_MODE = false;
 
-// --- MOCK DATA (No longer used in the application) ---
+// --- MOCK DATA (Used when DEV_MODE is true) ---
 
 // A mock Firebase User object to simulate a logged-in user.
 export const mockUser = {
   uid: 'dev-user-01',
   email: 'dev@fittrack.ai',
   displayName: 'Dev User',
+  photoURL: 'https://i.pravatar.cc/150?u=dev@fittrack.ai',
   emailVerified: true,
   isAnonymous: false,
   metadata: {},
@@ -20,7 +21,7 @@ export const mockUser = {
   refreshToken: '',
   tenantId: null,
   delete: () => Promise.resolve(),
-  getIdToken: () => Promise.resolve(''),
+  getIdToken: () => Promise.resolve('mock-token'),
   getIdTokenResult: () => Promise.resolve({} as any),
   reload: () => Promise.resolve(),
   toJSON: () => ({}),
